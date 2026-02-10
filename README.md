@@ -8,13 +8,13 @@ Globally, approximately **322,000 people** are diagnosed with brain and central 
 
 **For every £5 donated, I’ll add the distance of one half marathon (21.1 km) to my total running distance for the year, up to a maximum of 1,000 km in 2026.**
 
-If I reach my fundraising goal, I’ll be taking on the equivalent of **nearly 50 half marathons** over the course of the year. This distance will be completed gradually across my regular runs. This is no small feat for me. I’m not a seasoned runner and only recently took up running. The thought of covering **1,000 kilometres** this year is both daunting and deeply motivating. Every kilometre will be a challenge, but knowing that each one represents someone’s generosity in the fight against cancer makes every step worthwhile.
-
 <br>
 
 <a href="https://fundraise.cancerresearchuk.org/page/8hantanu"><button>Donate to "Shantanu's Run to Raise"</button></a>
 
 <br>
+
+If I reach my fundraising goal, I’ll be taking on the equivalent of **nearly 50 half marathons** over the course of the year. This distance will be completed gradually across my regular runs. This is no small feat for me. I’m not a seasoned runner and only recently took up running. The thought of covering **1,000 kilometres** this year is both daunting and deeply motivating. Every kilometre will be a challenge, but knowing that each one represents someone’s generosity in the fight against cancer makes every step worthwhile.
 
 This cause is deeply personal to me, and I'm grateful for any support you can offer.
 

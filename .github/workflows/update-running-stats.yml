@@ -1,0 +1,112 @@
+name: Update Running Stats
+
+on:
+  schedule:
+    # Runs daily at 6 AM UTC (adjust as needed)
+    - cron: '0 6 * * *'
+  workflow_dispatch: # Allows manual trigger
+
+jobs:
+  update-stats:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+          
+      - name: Install dependencies
+        run: |
+          pip install requests
+          
+      - name: Fetch Strava data and update stats
+        env:
+          STRAVA_CLIENT_ID: ${{ secrets.STRAVA_CLIENT_ID }}
+          STRAVA_CLIENT_SECRET: ${{ secrets.STRAVA_CLIENT_SECRET }}
+          STRAVA_REFRESH_TOKEN: ${{ secrets.STRAVA_REFRESH_TOKEN }}
+        run: |
+          python << 'EOF'
+          import requests
+          import json
+          import os
+          from datetime import datetime
+
+          # Get new access token using refresh token
+          auth_url = "https://www.strava.com/oauth/token"
+          auth_data = {
+              'client_id': os.environ['STRAVA_CLIENT_ID'],
+              'client_secret': os.environ['STRAVA_CLIENT_SECRET'],
+              'refresh_token': os.environ['STRAVA_REFRESH_TOKEN'],
+              'grant_type': 'refresh_token'
+          }
+          
+          auth_response = requests.post(auth_url, data=auth_data)
+          access_token = auth_response.json()['access_token']
+          
+          # Fetch activities for 2026
+          headers = {'Authorization': f'Bearer {access_token}'}
+          activities_url = "https://www.strava.com/api/v3/athlete/activities"
+          
+          # Get activities after January 1, 2026
+          after_timestamp = int(datetime(2026, 1, 1).timestamp())
+          params = {
+              'after': after_timestamp,
+              'per_page': 200  # Adjust if you expect more than 200 activities
+          }
+          
+          all_activities = []
+          page = 1
+          
+          while True:
+              params['page'] = page
+              response = requests.get(activities_url, headers=headers, params=params)
+              activities = response.json()
+              
+              if not activities:
+                  break
+                  
+              all_activities.extend(activities)
+              page += 1
+              
+              # Safety break if more than 1000 activities
+              if page > 5:
+                  break
+          
+          # Filter for runs and calculate total distance
+          total_distance_meters = 0
+          run_count = 0
+          
+          for activity in all_activities:
+              if activity['type'] in ['Run', 'VirtualRun']:
+                  total_distance_meters += activity['distance']
+                  run_count += 1
+          
+          # Convert to kilometers
+          total_km = total_distance_meters / 1000
+          
+          # Prepare stats object
+          stats = {
+              'total_km': round(total_km, 2),
+              'run_count': run_count,
+              'last_updated': datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S UTC'),
+              'year': 2026,
+              'goal_km': 1000
+          }
+          
+          # Write to JSON file
+          with open('running-stats.json', 'w') as f:
+              json.dump(stats, f, indent=2)
+          
+          print(f"Updated stats: {total_km:.2f} km from {run_count} runs")
+          EOF
+          
+      - name: Commit and push if changed
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add running-stats.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Update running stats [automated]" && git push)

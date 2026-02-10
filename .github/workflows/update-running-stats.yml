@@ -145,8 +145,12 @@ jobs:
               'goal_km': 1000
           }
           
-          # Write to JSON file
-          with open('running-stats.json', 'w') as f:
+          # Create _data directory if it doesn't exist
+          import os
+          os.makedirs('_data', exist_ok=True)
+          
+          # Write to JSON file in _data folder
+          with open('_data/running-stats.json', 'w') as f:
               json.dump(stats, f, indent=2)
           
           print(f"Updated stats: {total_km:.2f} km from {run_count} runs")

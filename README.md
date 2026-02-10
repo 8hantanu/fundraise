@@ -22,12 +22,12 @@ This cause is deeply personal to me, and I'm grateful for any support you can of
 
 ## Current Stats
 
+Below are my stats for the year 2026.
+
 {% assign stats = site.data.running-stats %}
 {% assign progress = stats.total_km | times: 100 | divided_by: stats.goal_km %}
 {% assign remaining = stats.goal_km | minus: stats.total_km %}
 
-| Metric           | Value |
-|------------------|-------|
 | Total runs       | {{ stats.run_count }} |
 | Total distance   | {{ stats.total_km }} km |
 | Goal             | 250£ / 1000km |

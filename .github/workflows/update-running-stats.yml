@@ -6,6 +6,9 @@ on:
     - cron: '0 6 * * *'
   workflow_dispatch: # Allows manual trigger
 
+permissions:
+  contents: write  # Allow the workflow to commit and push
+
 jobs:
   update-stats:
     runs-on: ubuntu-latest
@@ -44,8 +47,18 @@ jobs:
               'grant_type': 'refresh_token'
           }
           
+          print("Requesting new access token from Strava...")
           auth_response = requests.post(auth_url, data=auth_data)
-          access_token = auth_response.json()['access_token']
+          
+          print(f"Auth response status: {auth_response.status_code}")
+          
+          if auth_response.status_code != 200:
+              print(f"Error response: {auth_response.text}")
+              raise Exception(f"Failed to get access token: {auth_response.status_code}")
+          
+          auth_json = auth_response.json()
+          access_token = auth_json['access_token']
+          print("Successfully obtained access token")
           
           # Fetch activities for 2026
           headers = {'Authorization': f'Bearer {access_token}'}
@@ -58,17 +71,26 @@ jobs:
               'per_page': 200  # Adjust if you expect more than 200 activities
           }
           
+          print(f"Fetching activities after {datetime(2026, 1, 1).strftime('%Y-%m-%d')}...")
+          
           all_activities = []
           page = 1
           
           while True:
               params['page'] = page
               response = requests.get(activities_url, headers=headers, params=params)
+              
+              if response.status_code != 200:
+                  print(f"Error fetching activities: {response.status_code}")
+                  print(f"Response: {response.text}")
+                  raise Exception(f"Failed to fetch activities: {response.status_code}")
+              
               activities = response.json()
               
               if not activities:
                   break
-                  
+              
+              print(f"Fetched {len(activities)} activities from page {page}")
               all_activities.extend(activities)
               page += 1
               
@@ -76,14 +98,40 @@ jobs:
               if page > 5:
                   break
           
+          print(f"Total activities fetched: {len(all_activities)}")
+          
           # Filter for runs and calculate total distance
           total_distance_meters = 0
           run_count = 0
+          seen_timestamps = {}  # Track activities by start time to avoid duplicates
+          
+          print("Processing running activities...")
           
           for activity in all_activities:
               if activity['type'] in ['Run', 'VirtualRun']:
-                  total_distance_meters += activity['distance']
+                  # Skip Nike Run Club activities
+                  if 'Nike Run Club' in activity['name']:
+                      print(f"  Skipping NRC: {activity['name']}")
+                      continue
+                  
+                  # Additional check: avoid duplicates by timestamp
+                  start_time = activity['start_date']
+                  distance = activity['distance']
+                  
+                  # Create a key for this run (date + approximate distance)
+                  run_key = f"{start_time[:16]}_{int(distance/100)}"  # Round to 100m
+                  
+                  # Skip if we've already counted a very similar run
+                  if run_key in seen_timestamps:
+                      print(f"  Skipping duplicate: {activity['name']} ({distance/1000:.2f} km)")
+                      continue
+                  
+                  seen_timestamps[run_key] = True
+                  total_distance_meters += distance
                   run_count += 1
+                  date = start_time[:10]
+                  device = activity.get('device_name', 'Unknown')
+                  print(f"  ✓ {date}: {activity['name']} ({distance/1000:.2f} km) [{device}]")
           
           # Convert to kilometers
           total_km = total_distance_meters / 1000

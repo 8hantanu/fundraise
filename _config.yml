@@ -1,0 +1,11 @@
+title: Shantanu's Run to Raise
+author: Shantanu Mishra
+email: fundraise@8hantanu.net
+
+url: https://8hantanu.net
+baseurl: /fundraise
+
+remote_theme: yree/mold
+
+footer_content: >
+  [8hantanu](https://8hantanu.net) — [comment](javascript:window.location='mailto:fundraise@8hantanu.net?subject='+encodeURIComponent(document.title)) — [previous](..)
